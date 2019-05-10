@@ -10,6 +10,7 @@ library(mongolite)
 library(magrittr)
 library(dplyr)
 library(tidyr)
+# test
 file <- "/Users/davidapolinar/Dropbox/CUNYProjects/Srping2019/Data607/FinalProject/monthlyannualtemp-converted.csv"
 
 weather.data = read.csv(file, stringsAsFactors = FALSE)
