@@ -1,14 +1,4 @@
 ---
-title: "Untitled"
-author: "Christina Valore"
-date: "5/10/2019"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
----
 title: 'Data 607: Final Project'
 author: "Anthony Munoz, Christina Valore, David Apolinar"
 date: "5/10/2019"
