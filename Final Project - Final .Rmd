@@ -25,9 +25,25 @@ library(tidyr)
 
 # Project Overview
 
+NYC Subway delays have been constantly scrutinized for being delayed all the time. There are daily articles published criticizing the MTA for not doing enough to resolve the constant delays that plague the 100+ year aging subway system. To make matters worse, there is constant scrutiny over the MTA overpaying its workers and not contributing to repairing its infrastructure.
+
+* https://patch.com/new-york/new-york-city/nyc-subway-delays-8-lines-messed-during-morning-rush
+* https://www.cbsnews.com/news/new-york-struggling-transit-agency-mta-paid-one-worker-344k-in-overtime/
+
+As part of this analysis, we want to determine what could be the causes of the NYC Subway system. We gathered data from several locations, including the MTA's own published performance metrics.
+
 # Business Question
 
-Is the time of the year predicitive of the NYC subway on-time perfromance (OTP)?
+
+As part of this analysis, we want to answer the following questions?
+
+* Is the time of the year predicitive of the NYC subway on-time perfromance (OTP)?
+* Are there other factors contributing to the delays?
+  
+  * population increases
+  * weather impact
+
+Using some of the collected data, we want to detemrine whether there may be external factors that may show some level of correlation with they delays. It's quite possible that it may not be the case, but this is why we analyze the data to come to a conclusion.
 
 # Obtain the Data
 
