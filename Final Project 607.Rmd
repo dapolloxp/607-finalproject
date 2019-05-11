@@ -77,6 +77,10 @@ While there is no accurate source of population per year, we based our populatio
 
 http://worldpopulationreview.com/us-cities/new-york-city-population
 
+
+### Subway Data Processing
+
+
 ```{r MTA}
 # load data
 data<- read.csv("https://raw.githubusercontent.com/ChristinaValore/stats-prob-606/master/Performance_NYCT.csv", header=TRUE, check.names = FALSE)
@@ -99,7 +103,7 @@ To process the weather data, we decided to convert to a CSV and store it directl
 The resulting values were stored into a dataframe and then converted from wide to long format using tidyverse gather
 
 ```{r mongo}
-file.old <- "/Users/davidapolinar/Dropbox/CUNYProjects/Srping2019/Data607/FinalProject/monthlyannualtemp-converted.csv"
+#file.old <- "/Users/davidapolinar/Dropbox/CUNYProjects/Srping2019/Data607/FinalProject/monthlyannualtemp-converted.csv"
 file <- "https://raw.githubusercontent.com/dapolloxp/607-finalproject/master/monthlyannualtemp-converted.csv"
 
 weather.data = read.csv(file, stringsAsFactors = FALSE)
@@ -126,8 +130,21 @@ mgo$find('{"YEAR":{}}')
 ```{r}
 weather.2017.cleaned <- weather.2017 %>% select(-ANNUAL)
 new <- gather(weather.2017.cleaned , 'JAN', 'FEB', 'MAR', 'APR','MAY','JUN','JUL','AUG', 'SEP','OCT','NOV','DEC',key = 'Month', value = 'Avg Monthly Temp')
+```
 
-new %>% arrange(YEAR)
+**Before Converting the data from wide to long:**
+
+
+
+```{r}
+weather.2017
+```
+
+**After the conversion:**
+
+```{r}
+
+head(new %>% arrange(YEAR),n=20)
 ```
 ## Population Data Processing
 
