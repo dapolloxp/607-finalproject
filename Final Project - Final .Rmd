@@ -2,7 +2,18 @@
 title: 'Data 607: Final Project'
 author: "Anthony Munoz, Christina Valore, David Apolinar"
 date: "5/10/2019"
-output: html_document
+output: 
+  html_document:
+    #df_print: paged
+    toc: true # table of content true
+    toc_collapsed : false
+    toc_float: true
+    code_folding : show
+    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: true  ## if you want number sections at each table header
+    smooth_scroll: true
+    theme: cerulean  # many options for theme, this one is my favorite.
+    highlight: textmate  # specifies the syntax highlighting style
 ---
 
 ```{r setup, include=FALSE}
@@ -12,13 +23,13 @@ library(dplyr)
 library(tidyr)
 ```
 
-## Project Overview
+# Project Overview
 
-## Business Question
+# Business Question
 
 Is the time of the year predicitive of the NYC subway on-time perfromance (OTP)?
 
-## Obtain the Data
+# Obtain the Data
 
 Source: MTA
 
@@ -74,14 +85,14 @@ wide.to.long %>% arrange(YEAR)
 ## @Anthony - please add in the population data
 ```
 
-## Cleansing
+# Cleansing
 
 ```{r}
 ## Once we have all the data - we can attempt to combine all a do a futher cleansing process as needed.
 ```
 
 
-## Exploration
+# Exploration
 
 ```{r ggplot}
 library(ggplot2)
@@ -96,22 +107,22 @@ names(month_mean)<- c("LINE","AVG")
 ggplot(month_mean,aes(x=reorder(LINE,-AVG), y= AVG)) + geom_bar(stat="identity") + theme (axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 ```
 
-## Modeling 
+# Modeling 
 
-## Interpreration
+# Interpreration
 
 Is weather a predictor of the NYC subway's on time percentage (OTP)?
 
-## Obtain the Data
+# Obtain the Data
 
 
 
-## Cleansing
+# Cleansing
 
-## Exploration
+# Exploration
 
-## Modeling 
+# Modeling 
 
-## Interpreting
+# Interpreting
 
-## Conclusion
+# Conclusion
