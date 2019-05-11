@@ -86,21 +86,14 @@ new %>% arrange(YEAR)
 
 
 ```{r population}
-<<<<<<< HEAD
-##
-=======
-## @Anthony - please add in the population data
->>>>>>> dedd88dfbb855276fc2e205c9cc15b1470473164
-
 library(rvest)
 population.data <- read_html("http://worldpopulationreview.com/us-cities/new-york-city-population")
 pop.table <-population.data %>% html_nodes("table") %>% .[[1]] %>% html_table()
 expected.growth <-pop.table[2:9,1:2]
 names(expected.growth) <- pop.table[1,1:2]
-<<<<<<< HEAD
+
 expected.growth
-=======
->>>>>>> dedd88dfbb855276fc2e205c9cc15b1470473164
+
 ```
 
 # Cleansing
