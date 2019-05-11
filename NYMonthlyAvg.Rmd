@@ -11,7 +11,8 @@ library(magrittr)
 library(dplyr)
 library(tidyr)
 # test
-file <- "/Users/davidapolinar/Dropbox/CUNYProjects/Srping2019/Data607/FinalProject/monthlyannualtemp-converted.csv"
+file.old <- "/Users/davidapolinar/Dropbox/CUNYProjects/Srping2019/Data607/FinalProject/monthlyannualtemp-converted.csv"
+file <- "https://raw.githubusercontent.com/dapolloxp/607-finalproject/master/monthlyannualtemp-converted.csv"
 
 weather.data = read.csv(file, stringsAsFactors = FALSE)
 cleaned.weather <- weather.data %>% select(-11)
@@ -39,4 +40,14 @@ test2 <- test %>% select(-ANNUAL)
 new <- gather(test2, 'JAN', 'FEB', 'MAR', 'APR','MAY','JUN','JUL','AUG', 'SEP','OCT','NOV','DEC',key = 'Month', value = 'Avg Monthly Temp')
 
 new %>% arrange(YEAR)
+```
+
+
+
+```{r}
+
+library(rvest)
+lego_movie <- read_html("http://worldpopulationreview.com/us-cities/new-york-city-population")
+lego_movie
+
 ```
