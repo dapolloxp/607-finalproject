@@ -1,6 +1,6 @@
 ---
 title: 'Data 607: Final Project'
-author: "Anthony Munoz, Christina Valore, David Apolinar"
+author: "Anthony Munoz, Christina Valore, David Apolinar."
 date: "5/10/2019"
 output: 
   html_document:
@@ -129,12 +129,13 @@ missing.days <- c(77.5, 76, 68.5, 57.5, 47.5, 38)
 cleaned.weather[150,8:13] <- missing.days
 cleaned.weather[150,14] <- apply(cleaned.weather[10,2:13],1,mean)
 
-mongo_pwd_file <- "/Users/christinavalore/Desktop/password.txt"
+#mongo_pwd_file <- "/Users/christinavalore/Desktop/password.txt"
+mongo_pwd_file <- "/Users/davidapolinar/Dropbox/CUNYProjects/Srping2019/Data607/Week 13/mongopassword.txt"
 
 mongo_password <-read.delim(mongo_pwd_file, header = FALSE, stringsAsFactors = FALSE)
 
-url <- paste0("mongodb://nyc.admin:", mongo_password$V1 , "@52.167.52.62:27017/weather",sep = "")
-
+#url <- paste0("mongodb://nyc.admin:", mongo_password$V1 , "@52.167.52.62:27017/weather",sep = "")
+url <- paste0("mongodb://nyc.admin:", mongo_password$V1 , "@10.20.1.6:27017/weather",sep = "")
 mgo <- mongo(collection = "nyc", db = "weather",  url=url, verbose = TRUE)
 mgo$drop()
 mgo$insert(cleaned.weather)
