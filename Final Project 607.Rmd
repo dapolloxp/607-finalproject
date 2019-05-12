@@ -103,7 +103,6 @@ table(sub$PERIOD_YEAR)
 table(sub$INDICATOR_NAME)
 
 # we would like the data to be as similar as possible so we will remove the years 2009 and 2010 as they have the least data and standardize the remainder of the years be removing incomplete subway lines: S line 42 and the W line
-
 sub.updated<-sub %>% 
   filter(PERIOD_YEAR >= "2011", INDICATOR_NAME != "OTP (Terminal) - W Line", INDICATOR_NAME != "OTP (Terminal) - S Line 42 St.")
 
@@ -183,7 +182,7 @@ new<-new %>%
    PERIOD_MONTH = Month
   )
 
-new$PERIOD_MONTH<- as.integer(new$PERIOD_MONTH)
+new$PERIOD_MONTH<- as.character(new$PERIOD_MONTH)
 
 new.weather<-new %>% 
   filter(PERIOD_YEAR >= "2011" & PERIOD_YEAR <="2017")
@@ -229,13 +228,16 @@ str(combined)
 combined$PERIOD_YEAR<- as.factor(combined$PERIOD_YEAR)
 combined$PERIOD_MONTH<- as.factor(combined$PERIOD_MONTH)
 
+otp_df<- subset(combined, PARENT_SEQ=='391690')
+rider_df <- subset(combined, INDICATOR_NAME=="Total Ridership - Subways")
 
-# aggregrate temperature values monthly
-agg.temp<-aggregate(list(MONTHLY_TEMP=combined$MONTHLY_TEMP), by = list(MONTH=combined$PERIOD_MONTH), FUN=mean)
+# aggregate OTP & Weather by month
+agg_otp<- aggregate(list(MONTHLY_OTP=otp_df$MONTHLY_ACTUAL,MONTHLY_TEMP=otp_df$MONTHLY_TEMP), by= list(MONTH=otp_df$PERIOD_MONTH), FUN=mean)
 
-# aggregate OTP and ridership
+# aggregate ridership by month
+agg_ride<- aggregate(list(MONTHLY_RIDERSHIP=rider_df$MONTHLY_ACTUAL), by= list(MONTH=rider_df$PERIOD_MONTH), FUN=mean)
 
-
+agg.combined<-left_join(agg_otp, agg_ride, by= c("MONTH"))
 
 ```
 
@@ -247,25 +249,32 @@ library(ggplot2)
 library(ggthemes)
 
 # scatter plot 
-scatter.smooth(x=agg$MONTHLY_TEMP, y=agg$MONTH_VALUE)
+scatter.smooth(x=agg.combined$MONTHLY_TEMP, y=agg.combined$MONTHLY_OTP)
 
 # boxplot to see outliers
 par(mfrow=c(1, 2))  # divide graph area in 2 columns
-boxplot(aggr$`Overall monthly OTP`,sub=paste("Outlier rows: ", boxplot.stats(aggr$`Overall monthly OTP`)$out))  
-boxplot(aggr$`Overall monthly temp`, sub=paste("Outlier rows: ", boxplot.stats(aggr$`Overall monthly temp`)$out))  
+boxplot(agg.combined$MONTHLY_OTP,sub=paste("Outlier rows: ", boxplot.stats(agg.combined$MONTHLY_OTP)$out))  
+boxplot(agg.combined$MONTHLY_TEMP, sub=paste("Outlier rows: ", boxplot.stats(agg.combined$MONTHLY_TEMP)$out))  
 
 # density plot 
 library(e1071)
 par(mfrow=c(1, 2))  # divide graph area in 2 columns
 
-plot(density(aggr$`Overall monthly OTP`), main="Density Plot: Monthly OTP", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(aggr$`Overall monthly OTP`), 3)))  
-polygon(density(aggr$`Overall monthly OTP`), col="red")
+plot(density(agg.combined$MONTHLY_OTP), main="Density Plot: Monthly OTP", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(agg.combined$MONTHLY_OTP), 3)))  
+polygon(density(agg.combined$MONTHLY_OTP), col="red")
 
-plot(density(aggr$`Overall monthly temp`), main="Density Plot: Monthly Temp", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(aggr$`Overall monthly temp`), 3)))  
-polygon(density(aggr$`Overall monthly temp`), col="red")
+plot(density(agg.combined$MONTHLY_TEMP), main="Density Plot: Monthly Temp", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(agg.combined$MONTHLY_TEMP), 3)))  
+polygon(density(agg.combined$MONTHLY_TEMP), col="red")
 
-# the correltion is very weak between OTP and temp, approximately 21% - is there another variable from the initial dataset that will work better?
-cor(aggr$`Overall monthly OTP`, aggr$`Overall monthly temp`) 
+# the correlation is weak between the monthly subway OTP and the monthly temp at 21%
+cor(agg.combined$MONTHLY_OTP,agg.combined$MONTHLY_TEMP)
+
+# the correlation is weak between the monthly ridership and the OTP at 11%
+cor(agg.combined$MONTHLY_OTP, agg.combined$MONTHLY_RIDERSHIP)
+
+# the correlation is better between temperature and ridershop at 33%
+cor(agg.combined$MONTHLY_RIDERSHIP, agg.combined$MONTHLY_TEMP)
+
 
 
 ```
@@ -273,35 +282,27 @@ cor(aggr$`Overall monthly OTP`, aggr$`Overall monthly temp`)
 # Modeling 
 ```{r}
 
+#OTP = month + weather + ridership
 
-#OTP = month + weather
-
-# all factors considered gives us 87.96
-fit <- lm( `Monthly Actual`~ `Avg Monthly Temp` + `Monthly Target` + Subway + Year , data=combined)
+# ANOVA
+fit <- lm(MONTHLY_RIDERSHIP ~ MONTHLY_TEMP, data=agg.combined)
 summary(fit) 
 plot(fit)
 
-fit2<- lm( `Monthly Actual`~ `Avg Monthly Temp` + Subway, data=combined)
+fit2<- lm(MONTHLY_OTP ~ MONTHLY_TEMP, data=agg.combined)
 summary(fit2) 
 plot(fit2)
 
-fit3<- lm( `Monthly Actual`~ `Monthly Target`, data=combined)
+fit3<- lm(MONTHLY_OTP ~ MONTHLY_TEMP + MONTHLY_RIDERSHIP, data=agg.combined)
 summary(fit3) 
 plot(fit3)
 
-fit4<- lm( `Monthly Actual`~ Subway, data=combined)
-summary(fit4) 
-plot(fit4)
-
-fit5<- lm( `Monthly Actual`~ Year, data=combined)
-summary(fit5) 
-plot(fit5)
-
+library (betareg)
 
 ```
 
 
-# Interpreration
+# Interpretation
 
 Is weather a predictor of the NYC subway's on time percentage (OTP)?
 
