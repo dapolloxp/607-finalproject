@@ -40,7 +40,6 @@ As part of this analysis, we want to answer the following questions?
 * Is the time of the year predicitive of the NYC subway on-time performance (OTP)?
 * Are there other factors contributing to the delays?
   
-  * population increases
   * weather impact
 
 Using some of the collected data, we want to detemrine whether there may be external factors that may show some level of correlation with they delays. It's quite possible that it may not be the case, but this is why we analyze the data to come to a conclusion.
@@ -85,13 +84,13 @@ http://worldpopulationreview.com/us-cities/new-york-city-population
 # load data
 data<- read.csv("https://raw.githubusercontent.com/ChristinaValore/stats-prob-606/master/Performance_NYCT.csv", header=TRUE, check.names = FALSE)
 
-# subsetting the data to only pull out the OTP (ON TIME %) and total ridership
-sub <-data[ which(data$PARENT_SEQ=='391690'| data$INDICATOR_SEQ=='103929'), ]
+# subsetting the data to only pull out the OTP (ON TIME %)
+sub <-data[ which(data$PARENT_SEQ=='391690'), ]
 
-head(otp,10)
+head(sub,10)
 
 # remove columns that are not needed for this analysis
-sub<- sub[c(-3, -5:-10)]
+sub<- sub[c(-1:-3, -5:-10)]
 
 # check for the completeness of the data by checking how many subways were analyzed
 unique(sub$INDICATOR_NAME)
@@ -107,8 +106,8 @@ sub.updated<-sub %>%
   filter(PERIOD_YEAR >= "2011", INDICATOR_NAME != "OTP (Terminal) - W Line", INDICATOR_NAME != "OTP (Terminal) - S Line 42 St.")
 
 # check on the data once more for completeness
-table(otp.updated$PERIOD_YEAR) 
-table(otp.updated$PERIOD_MONTH) 
+table(sub.updated$PERIOD_YEAR) 
+table(sub.updated$PERIOD_MONTH) 
 
 ```
 
@@ -182,8 +181,6 @@ new<-new %>%
    PERIOD_MONTH = Month
   )
 
-new$PERIOD_MONTH<- as.character(new$PERIOD_MONTH)
-
 new.weather<-new %>% 
   filter(PERIOD_YEAR >= "2011" & PERIOD_YEAR <="2017")
 ```
@@ -194,7 +191,6 @@ The data was retrieved from the following web link:
 http://worldpopulationreview.com/us-cities/new-york-city-population
 
 To process this data, we had to use the RVest libraries to process the HTML tables. This made the processing extremely simple. While RVest gathered all tables, we were able to filter the rows that we are interested in:
-
 
 
 ```{r population}
@@ -213,6 +209,16 @@ expected.growth
 ```{r}
 ## Once we have all the data - we can attempt to combine all a do a futher cleansing process as needed.
 
+# check the structure of the two frames before merging as year and month variable types must match before merge
+str(sub.updated)
+str(new.weather)
+
+sub.updated$PERIOD_YEAR<-as.factor(sub.updated$PERIOD_YEAR)
+sub.updated$PERIOD_MONTH<-as.factor(sub.updated$PERIOD_MONTH)
+new.weather$PERIOD_YEAR<-as.factor(new.weather$PERIOD_YEAR)
+new.weather$PERIOD_MONTH<-as.factor(new.weather$PERIOD_MONTH)
+
+# combine the two dataframes
 combined<-left_join(sub.updated, new.weather, by= c("PERIOD_YEAR", "PERIOD_MONTH"))
 
 #rename avg monthly temp column to conform to caps standards
@@ -221,24 +227,22 @@ combined<-combined %>%
  MONTHLY_TEMP=`Avg Monthly Temp`
   )
 
-# decide what variable types need to be changed 
-str(combined)
+# compare the monthly actual OTP to the monthly target OTP and if the actual is >= then the value is true, or the subway was on time for that month or in the ridership case, there was more riders than targeted
+combined$ON_TIME <- as.numeric(combined$MONTHLY_ACTUAL >= combined$MONTHLY_TARGET)
 
-# change year/month to factors as no mathematical operations will be performed
-combined$PERIOD_YEAR<- as.factor(combined$PERIOD_YEAR)
-combined$PERIOD_MONTH<- as.factor(combined$PERIOD_MONTH)
+# change percenmtages to decimals
+combined$MONTHLY_TARGET <-  combined$MONTHLY_TARGET/100
+combined$MONTHLY_ACTUAL <-  combined$MONTHLY_ACTUAL/100
+combined$YTD_TARGET <-  combined$YTD_TARGET/100
+combined$YTD_ACTUAL <-  combined$YTD_ACTUAL/100
 
-otp_df<- subset(combined, PARENT_SEQ=='391690')
-rider_df <- subset(combined, INDICATOR_NAME=="Total Ridership - Subways")
+# approximately 20 weekdays in a month as the OTP is only measured for weekdays
+combined$DAYS_ON_TIME<-combined$MONTHLY_ACTUAL*20
 
-# aggregate OTP & Weather by month
-agg_otp<- aggregate(list(MONTHLY_OTP=otp_df$MONTHLY_ACTUAL,MONTHLY_TEMP=otp_df$MONTHLY_TEMP), by= list(MONTH=otp_df$PERIOD_MONTH), FUN=mean)
+# aggregate the values to see avg's by month
+agg.combined<- aggregate(list(DAYS_ON_TIME=combined$DAYS_ON_TIME,MONTHLY_TEMP=combined$MONTHLY_TEMP), by= list(PERIOD_MONTH=combined$PERIOD_MONTH), FUN=mean)
 
-# aggregate ridership by month
-agg_ride<- aggregate(list(MONTHLY_RIDERSHIP=rider_df$MONTHLY_ACTUAL), by= list(MONTH=rider_df$PERIOD_MONTH), FUN=mean)
-
-agg.combined<-left_join(agg_otp, agg_ride, by= c("MONTH"))
-
+agg.combined$PERIOD_MONTH<- as.factor(agg.combined$PERIOD_MONTH)
 ```
 
 
@@ -248,56 +252,67 @@ agg.combined<-left_join(agg_otp, agg_ride, by= c("MONTH"))
 library(ggplot2)
 library(ggthemes)
 
+# plot shows a curve in the values, linear regression might not be best
+plot(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME)
+
 # scatter plot 
-scatter.smooth(x=agg.combined$MONTHLY_TEMP, y=agg.combined$MONTHLY_OTP)
+scatter.smooth(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME)
 
 # boxplot to see outliers
 par(mfrow=c(1, 2))  # divide graph area in 2 columns
-boxplot(agg.combined$MONTHLY_OTP,sub=paste("Outlier rows: ", boxplot.stats(agg.combined$MONTHLY_OTP)$out))  
-boxplot(agg.combined$MONTHLY_TEMP, sub=paste("Outlier rows: ", boxplot.stats(agg.combined$MONTHLY_TEMP)$out))  
+boxplot(x=agg.combined$MONTHLY_TEMP,sub=paste("Outlier rows: ", boxplot.stats(x=agg.combined$MONTHLY_TEMP)$out))  
+boxplot(agg.combined$DAYS_ON_TIME, sub=paste("Outlier rows: ", boxplot.stats(agg.combined$DAYS_ON_TIME)$out))  
 
 # density plot 
 library(e1071)
 par(mfrow=c(1, 2))  # divide graph area in 2 columns
 
-plot(density(agg.combined$MONTHLY_OTP), main="Density Plot: Monthly OTP", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(agg.combined$MONTHLY_OTP), 3)))  
-polygon(density(agg.combined$MONTHLY_OTP), col="red")
-
-plot(density(agg.combined$MONTHLY_TEMP), main="Density Plot: Monthly Temp", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(agg.combined$MONTHLY_TEMP), 3)))  
+plot(density(agg.combined$MONTHLY_TEMP), main="Density Plot: MONTHLY TEMP", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(agg.combined$MONTHLY_TEMP), 3)))  
 polygon(density(agg.combined$MONTHLY_TEMP), col="red")
 
-# the correlation is weak between the monthly subway OTP and the monthly temp at 21%
-cor(agg.combined$MONTHLY_OTP,agg.combined$MONTHLY_TEMP)
+plot(density(agg.combined$DAYS_ON_TIME), main="Density Plot: DAYS ON TIME", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(agg.combined$DAYS_ON_TIME), 3)))  
+polygon(density(agg.combined$DAYS_ON_TIME), col="red")
 
-# the correlation is weak between the monthly ridership and the OTP at 11%
-cor(agg.combined$MONTHLY_OTP, agg.combined$MONTHLY_RIDERSHIP)
-
-# the correlation is better between temperature and ridershop at 33%
-cor(agg.combined$MONTHLY_RIDERSHIP, agg.combined$MONTHLY_TEMP)
-
-
+# the correlation is weak between the subway days on time and the monthly temp at 20%
+cor(agg.combined$MONTHLY_TEMP,agg.combined$DAYS_ON_TIME)
 
 ```
 
 # Modeling 
 ```{r}
 
-#OTP = month + weather + ridership
-
-# ANOVA
-fit <- lm(MONTHLY_RIDERSHIP ~ MONTHLY_TEMP, data=agg.combined)
+# Linear model: DAYS_ON_TIME =  0.003394 * MONTHLY_TEMP + 14.672797 
+fit<- lm(DAYS_ON_TIME ~ MONTHLY_TEMP, agg.combined)
 summary(fit) 
-plot(fit)
 
-fit2<- lm(MONTHLY_OTP ~ MONTHLY_TEMP, data=agg.combined)
+# Plot the values with a best fit line
+plot(DAYS_ON_TIME ~ MONTHLY_TEMP, agg.combined, xlab="Monthly temperature", ylab="Subway days on-time", main="Temperature vs. Days On-time")
+abline(fit)
+
+# residual analysis 
+plot(fit$fitted.values, fit$residuals, xlab="Fitted Values", ylab="Residuals",
+     main="Fitted Values vs. Residuals")
+
+qqnorm(fit$residuals)
+qqline(fit$residuals)
+
+# can we transform into a better fit?
+fit2 <- lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,2, raw=TRUE), agg.combined)
 summary(fit2) 
-plot(fit2)
 
-fit3<- lm(MONTHLY_OTP ~ MONTHLY_TEMP + MONTHLY_RIDERSHIP, data=agg.combined)
+fit3 <- lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,3, raw=TRUE), agg.combined)
 summary(fit3) 
-plot(fit3)
 
-library (betareg)
+# this polynomial has the best fit, with R2 of approx. 12%
+fit4<-lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,4, raw=TRUE), agg.combined)
+summary(fit4) 
+
+xx <- seq(0,80, length=50)
+plot(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME)
+lines(xx, predict(fit, data.frame(MONTHLY_TEMP=xx)), col="red")
+lines(xx, predict(fit2, data.frame(MONTHLY_TEMP=xx)), col="green")
+lines(xx, predict(fit3, data.frame(MONTHLY_TEMP=xx)), col="blue")
+lines(xx, predict(fit4, data.frame(MONTHLY_TEMP=xx)), col="purple")
 
 ```
 
