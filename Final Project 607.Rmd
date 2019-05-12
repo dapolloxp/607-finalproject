@@ -254,10 +254,10 @@ library(ggplot2)
 library(ggthemes)
 
 # plot shows a curve in the values, linear regression might not be best
-plot(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME)
+plot(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME,xlab = "Monthly Temp", ylab="% Days On Time")
 
 # scatter plot 
-scatter.smooth(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME)
+scatter.smooth(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME, xlab = "Monthly Temperature", ylab="% Days On Time")
 
 # boxplot to see outliers
 par(mfrow=c(1, 2))  # divide graph area in 2 columns
@@ -322,7 +322,15 @@ lines(xx, predict(fit4, data.frame(MONTHLY_TEMP=xx)), col="purple")
 
 Is weather a predictor of the NYC subway's on time percentage (OTP)?
 
-Based the on the polynomial regression model above, we can see that there isn't a direct relationship of temperature to train delays. In fact, the R2 of the model accounts for 12% of the variability. 
+**Outliners:**
+
+Our data for monthly temperatures and on-time delays appears to have several outliers, but it is much more pronounced with the OTP data towards the lower end.
+
+**Observation:**
+
+Our initial scatterplot of monthly temperature vs. days on-time seems to indicate that there is a slight positive train, but based the on the polynomial regression model above, we can see that there isn't a direct relationship of temperature to train delays. In fact, the R2 of the model accounts for 12% of the variability. 
+
+
 
 
 # Conclusion
