@@ -322,5 +322,8 @@ lines(xx, predict(fit4, data.frame(MONTHLY_TEMP=xx)), col="purple")
 
 Is weather a predictor of the NYC subway's on time percentage (OTP)?
 
+Based the on the polynomial regression model above, we can see that there isn't a direct relationship of temperature to train delays. In fact, the R2 of the model accounts for 12% of the variability. 
+
 
 # Conclusion
+
