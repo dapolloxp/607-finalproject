@@ -21,28 +21,21 @@ library(mongolite)
 library(magrittr)
 library(dplyr)
 library(tidyr)
+library(ggplot2)
+library(ggthemes)
+library(e1071)
 ```
 
 # Project Overview
 
-NYC Subway delays have been constantly scrutinized for being delayed all the time. There are daily articles published criticizing the MTA for not doing enough to resolve the constant delays that plague the 100+ year aging subway system. To make matters worse, there is constant scrutiny over the MTA overpaying its workers and not contributing to repairing its infrastructure.
+For this study, we investigated potentical causes that would affect NYC subways on-time performance (OTP). We chose this as our project as all of our team members commute within NYC and share the same frustration. Historically, NYC subways have not been efficient or clean, yet every year New Yorker's are paying more for the same dissapointing service: 
 
-* https://patch.com/new-york/new-york-city/nyc-subway-delays-8-lines-messed-during-morning-rush
-* https://www.cbsnews.com/news/new-york-struggling-transit-agency-mta-paid-one-worker-344k-in-overtime/
+* https://patch.com/new-york/new-york-city/nyc-subway-delays-8-lines-messed-during-morning-rush;
+* https://www.cbsnews.com/news/new-york-struggling-transit-agency-mta-paid-one-worker-344k-in-overtime/.
 
-As part of this analysis, we want to determine what could be the causes of the NYC Subway system. We gathered data from several locations, including the MTA's own published performance metrics.
+For our analysis, we took MTA subway data and historical weather patterns in NYC from the years 2011-2017. Our business question was: *Is weather predictive of NYC subway on-time performance?* After acquiring, cleaning and combining the dataframes, we ran a linear regression on the data. Unfortunately, the fit was poor and gave us litte insight into the relationship between weather and OTP. We then attempted to fit a polynomial to the data which gave a slightly better fit, however still the correlation was weak
 
-# Business Question
-
-
-As part of this analysis, we want to answer the following questions?
-
-* Is the time of the year predicitive of the NYC subway on-time performance (OTP)?
-* Are there other factors contributing to the delays?
-  
-  * weather impact
-
-Using some of the collected data, we want to detemrine whether there may be external factors that may show some level of correlation with they delays. It's quite possible that it may not be the case, but this is why we analyze the data to come to a conclusion.
+Our findings showed that NYC weather patterns are NOT predictive of NYC subway OTP. We can speculate that weather does not play a role as most of the subways are underground. Perhaps weather plays a stronger role in OTP for NYC buses or outside railways like the LIRR or the Staten Island Railway. 
 
 # Obtain the Data
 
@@ -78,7 +71,6 @@ http://worldpopulationreview.com/us-cities/new-york-city-population
 
 
 ### Subway Data Processing
-
 
 ```{r MTA}
 # load data
@@ -222,13 +214,13 @@ new.weather$PERIOD_MONTH<-as.factor(new.weather$PERIOD_MONTH)
 # combine the two dataframes
 combined<-left_join(sub.updated, new.weather, by= c("PERIOD_YEAR", "PERIOD_MONTH"))
 
-#rename avg monthly temp column to conform to caps standards
+# rename avg monthly temp column to conform to caps standards
 combined<-combined %>%
   rename(
  MONTHLY_TEMP=`Avg Monthly Temp`
   )
 
-# compare the monthly actual OTP to the monthly target OTP and if the actual is >= then the value is true, or the subway was on time for that month or in the ridership case, there was more riders than targeted
+# compare the monthly actual OTP to the monthly target OTP and if the actual is >= then the value is true
 combined$ON_TIME <- as.numeric(combined$MONTHLY_ACTUAL >= combined$MONTHLY_TARGET)
 
 # change percenmtages to decimals
@@ -250,8 +242,6 @@ agg.combined$PERIOD_MONTH<- as.factor(agg.combined$PERIOD_MONTH)
 # Exploration
 
 ```{r ggplot}
-library(ggplot2)
-library(ggthemes)
 
 # plot shows a curve in the values, linear regression might not be best
 plot(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME,xlab = "Monthly Temp", ylab="% Days On Time")
@@ -265,7 +255,6 @@ boxplot(x=agg.combined$MONTHLY_TEMP,sub=paste("Outlier rows: ", boxplot.stats(x=
 boxplot(agg.combined$DAYS_ON_TIME, sub=paste("Outlier rows: ", boxplot.stats(agg.combined$DAYS_ON_TIME)$out))  
 
 # density plot 
-library(e1071)
 par(mfrow=c(1, 2))  # divide graph area in 2 columns
 
 plot(density(agg.combined$MONTHLY_TEMP), main="Density Plot: MONTHLY TEMP", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(agg.combined$MONTHLY_TEMP), 3)))  
@@ -304,16 +293,16 @@ summary(fit2)
 fit3 <- lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,3, raw=TRUE), agg.combined)
 summary(fit3) 
 
-# this polynomial has the best fit, with R2 of approx. 12%
-fit4<-lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,4, raw=TRUE), agg.combined)
-summary(fit4) 
+# this polynomial has the best fit, with R2 of approx. 13%
+fit6<-lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,6, raw=TRUE), agg.combined)
+summary(fit6) 
 
 xx <- seq(0,80, length=50)
 plot(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME)
 lines(xx, predict(fit, data.frame(MONTHLY_TEMP=xx)), col="red")
 lines(xx, predict(fit2, data.frame(MONTHLY_TEMP=xx)), col="green")
 lines(xx, predict(fit3, data.frame(MONTHLY_TEMP=xx)), col="blue")
-lines(xx, predict(fit4, data.frame(MONTHLY_TEMP=xx)), col="purple")
+lines(xx, predict(fit10, data.frame(MONTHLY_TEMP=xx)), col="purple")
 
 ```
 
