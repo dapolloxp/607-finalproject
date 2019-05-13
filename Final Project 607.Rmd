@@ -21,103 +21,66 @@ library(mongolite)
 library(magrittr)
 library(dplyr)
 library(tidyr)
+library(ggplot2)
+library(ggthemes)
+library(e1071)
 ```
 
 # Project Overview
 
-NYC Subway delays have been constantly scrutinized for being delayed all the time. There are daily articles published criticizing the MTA for not doing enough to resolve the constant delays that plague the 100+ year aging subway system. To make matters worse, there is constant scrutiny over the MTA overpaying its workers and not contributing to repairing its infrastructure.
+For this study, we investigated potentical causes that would affect NYC subways on-time performance (OTP). We chose this as our project as all of our team members commute within NYC and share the same frustration. Historically, NYC subways have not been efficient or clean, yet every year New Yorker's are paying more for the same dissapointing service: 
 
-* https://patch.com/new-york/new-york-city/nyc-subway-delays-8-lines-messed-during-morning-rush
-* https://www.cbsnews.com/news/new-york-struggling-transit-agency-mta-paid-one-worker-344k-in-overtime/
+* https://patch.com/new-york/new-york-city/nyc-subway-delays-8-lines-messed-during-morning-rush;
+* https://www.cbsnews.com/news/new-york-struggling-transit-agency-mta-paid-one-worker-344k-in-overtime/.
 
-As part of this analysis, we want to determine what could be the causes of the NYC Subway system. We gathered data from several locations, including the MTA's own published performance metrics.
+For our analysis, we took MTA subway data and historical weather patterns in NYC from the years 2011-2017. Our business question was: *Is weather predictive of NYC subway on-time performance?* After acquiring, cleaning and combining the dataframes, we ran a linear regression on the data. Unfortunately, the fit was poor and gave us litte insight into the relationship between weather and OTP. We then attempted to fit a polynomial to the data which gave a slightly better fit, however still the correlation was weak
 
-# Business Question
-
-
-As part of this analysis, we want to answer the following questions?
-
-* Is the time of the year predicitive of the NYC subway on-time performance (OTP)?
-* Are there other factors contributing to the delays?
-  
-  * weather impact
-
-Using some of the collected data, we want to detemrine whether there may be external factors that may show some level of correlation with they delays. It's quite possible that it may not be the case, but this is why we analyze the data to come to a conclusion.
+Our findings showed that NYC weather patterns are NOT predictive of NYC subway OTP. We can speculate that weather does not play a role as most of the subways are underground. Perhaps weather plays a stronger role in OTP for NYC buses or outside railways like the LIRR or the Staten Island Railway. 
 
 # Obtain the Data
 
-Data was obtained from several locations:
+Data was obtained from the MTA website and weather.gov. 
 
-* MTA Performance Data
+For the *MTA data*, we uploaded it directly into R via a .CSV. We then subsetted the data to pull out only the OTP subway data and stored in an R dataframe. 
 
-This dataset included the following items:
-
-**Subway**
+* About the MTA subway performance dataset:
 
   *  Subway wait assessment for all lines
-  *  Customer Injury Rate
+  *  Customer injury rate
   *  Elevator availability
-  *  Escalator Availability
-  *  Mean Distance Between Failure
-  *  On-Time Performance, total and for all lines
-  *  Total Ridership
+  *  Escalator availability
+  *  Mean distance between failure
+  *  On-time performance (OTP), total and for all lines
+  *  Total ridership
 
 http://web.mta.info/developers/performance.html
 
-**Average Monthly and Annual Temperates at Centrak Park, NY**
+For the *weather data*, we downloaded a .CSV and then placed into a MongoDB instance running in Microsoft Azure. We then filtered by year with the query: weather.2017<-mgo$find('{"YEAR":{"$gt":2007}}'). The values were then stored into an R dataframe and converted from wide to long format using tidyverse gather.
 
-This data set includes all monthly averages from 1869 to 2018
+*About the weather.gov dataset:
+
+  * temperatures were recorded in Central Park, NY
+  * monthly average and annual temperatures from 1869 to 2018
 
 https://www.weather.gov/media/okx/Climate/CentralPark/monthlyannualtemp.pdf
 
-**Projected Population Data**
-
-While there is no accurate source of population per year, we based our population data from the 2010 census with projections built-in for each year.
-
-http://worldpopulationreview.com/us-cities/new-york-city-population
-
-
 ### Subway Data Processing
 
-
 ```{r MTA}
-# load data
+# load MTA data 
 data<- read.csv("https://raw.githubusercontent.com/ChristinaValore/stats-prob-606/master/Performance_NYCT.csv", header=TRUE, check.names = FALSE)
 
-# subsetting the data to only pull out the OTP (ON TIME %)
+# subset to pull out ONLY the OTP (ON TIME %)
 sub <-data[ which(data$PARENT_SEQ=='391690'), ]
 
+# view the subsetted data
 head(sub,10)
 
 # remove columns that are not needed for this analysis
 sub<- sub[c(-1:-3, -5:-10)]
-
-# check for the completeness of the data by checking how many subways were analyzed
-unique(sub$INDICATOR_NAME)
-
-# 24 subways were analyzed over 12 months so each year should have 288 values
-table(sub$PERIOD_YEAR) 
-
-# See if OTP was measured for all subway lines
-table(sub$INDICATOR_NAME)
-
-# we would like the data to be as similar as possible so we will remove the years 2009 and 2010 as they have the least data and standardize the remainder of the years be removing incomplete subway lines: S line 42 and the W line
-sub.updated<-sub %>% 
-  filter(PERIOD_YEAR >= "2011", INDICATOR_NAME != "OTP (Terminal) - W Line", INDICATOR_NAME != "OTP (Terminal) - S Line 42 St.")
-
-# check on the data once more for completeness
-table(sub.updated$PERIOD_YEAR) 
-table(sub.updated$PERIOD_MONTH) 
-
 ```
 
 ## Weather Data Processing
-
-To process the weather data, we decided to convert to a CSV and store it directly on a MongoDB instance running in Microsoft Azure. This made it easy to filter based on the year using the following query:
-
-* weather.2017<-mgo$find('{"YEAR":{"$gt":2007}}')
-
-The resulting values were stored into a dataframe and then converted from wide to long format using tidyverse gather
 
 ```{r mongo}
 #file.old <- "/Users/davidapolinar/Dropbox/CUNYProjects/Srping2019/Data607/FinalProject/monthlyannualtemp-converted.csv"
@@ -145,14 +108,39 @@ weather.2017<-mgo$find('{"YEAR":{"$gt":2007}}')
 mgo$find('{"YEAR":{}}')
 ```
 
-```{r}
+# Cleansing
+
+For the subway data, we checked for the completeness of the data as some years were missing OTP values ands some subway lines only had collected data from the mid-year. We removed all incomplete data including any years after 2011 and incomplete OTP for the subway lines W and S Line 42 St.
+
+For the weather data, after gathering the monthly averages by year, we converted the data from wide to long. In preperation for combined the two dataframes, we changed the month values to numerics, renamed the columns to match in both dataframes and finally, filtered the weather data to include only the same years as the subway data, 2011 - 2017. 
+
+Combining the data required that the year and month in both dataframes had matching variables and titles. We then did a left join on the dataframes and renames the columns to keep the column names in a standard format. 
+
+## Subway Data Cleansing
+```{r subway cleanse}
+# check for data completeness to see how manhy subways were analyzed
+unique(sub$INDICATOR_NAME)
+
+# 24 subways were analyzed over 12 months so each year should have 288 values
+table(sub$PERIOD_YEAR) 
+
+# See if OTP was measured for all subway lines
+table(sub$INDICATOR_NAME)
+
+# data should be as complete as possible so remove the years 2009 and 2010 and standardize the remainder of the years be removing incomplete subway lines: S line 42 & the W line
+sub.updated<-sub %>% 
+  filter(PERIOD_YEAR >= "2011", INDICATOR_NAME != "OTP (Terminal) - W Line", INDICATOR_NAME != "OTP (Terminal) - S Line 42 St.")
+
+# check on the data once more
+table(sub.updated$PERIOD_YEAR) 
+table(sub.updated$PERIOD_MONTH) 
+```
+## Weather Data Cleansing
+```{r weather}
 weather.2017.cleaned <- weather.2017 %>% select(-ANNUAL)
 new <- gather(weather.2017.cleaned , 'JAN', 'FEB', 'MAR', 'APR','MAY','JUN','JUL','AUG', 'SEP','OCT','NOV','DEC',key = 'Month', value = 'Avg Monthly Temp')
 ```
-
-**Before Converting the data from wide to long:**
-
-
+**Before converting the data from wide to long:**
 
 ```{r}
 weather.2017
@@ -163,6 +151,7 @@ weather.2017
 ```{r}
 head(new %>% arrange(YEAR),n=20)
 
+# to combine the datasets, we must make the month's equal values
 new [new== "JAN"]<-1
 new [new== "FEB"]<-2
 new [new== "MAR"]<-3
@@ -178,38 +167,16 @@ new [new== "DEC"]<-12
 
 new<-new %>%
   rename(
-    PERIOD_YEAR = YEAR,
+   PERIOD_YEAR = YEAR,
    PERIOD_MONTH = Month
   )
 
 new.weather<-new %>% 
   filter(PERIOD_YEAR >= "2011" & PERIOD_YEAR <="2017")
 ```
-## Population Data Processing
 
-The data was retrieved from the following web link: 
-
-http://worldpopulationreview.com/us-cities/new-york-city-population
-
-To process this data, we had to use the RVest libraries to process the HTML tables. This made the processing extremely simple. While RVest gathered all tables, we were able to filter the rows that we are interested in:
-
-
-```{r population}
-library(rvest)
-population.data <- read_html("http://worldpopulationreview.com/us-cities/new-york-city-population")
-pop.table <-population.data %>% html_nodes("table") %>% .[[1]] %>% html_table()
-expected.growth <-pop.table[2:9,1:2]
-names(expected.growth) <- pop.table[1,1:2]
-
-expected.growth
-
-```
-
-# Cleansing
-
-```{r}
-## Once we have all the data - we can attempt to combine all a do a futher cleansing process as needed.
-
+## Combined Data Cleansing
+```{r combined}
 # check the structure of the two frames before merging as year and month variable types must match before merge
 str(sub.updated)
 str(new.weather)
@@ -222,13 +189,13 @@ new.weather$PERIOD_MONTH<-as.factor(new.weather$PERIOD_MONTH)
 # combine the two dataframes
 combined<-left_join(sub.updated, new.weather, by= c("PERIOD_YEAR", "PERIOD_MONTH"))
 
-#rename avg monthly temp column to conform to caps standards
+# rename avg monthly temp column to conform to column naming standards
 combined<-combined %>%
   rename(
  MONTHLY_TEMP=`Avg Monthly Temp`
   )
 
-# compare the monthly actual OTP to the monthly target OTP and if the actual is >= then the value is true, or the subway was on time for that month or in the ridership case, there was more riders than targeted
+# compare the monthly actual OTP to the monthly target OTP and if the actual is >= then the value is true
 combined$ON_TIME <- as.numeric(combined$MONTHLY_ACTUAL >= combined$MONTHLY_TARGET)
 
 # change percenmtages to decimals
@@ -246,12 +213,9 @@ agg.combined<- aggregate(list(DAYS_ON_TIME=combined$DAYS_ON_TIME,MONTHLY_TEMP=co
 agg.combined$PERIOD_MONTH<- as.factor(agg.combined$PERIOD_MONTH)
 ```
 
-
 # Exploration
 
 ```{r ggplot}
-library(ggplot2)
-library(ggthemes)
 
 # plot shows a curve in the values, linear regression might not be best
 plot(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME,xlab = "Monthly Temp", ylab="% Days On Time")
@@ -265,7 +229,6 @@ boxplot(x=agg.combined$MONTHLY_TEMP,sub=paste("Outlier rows: ", boxplot.stats(x=
 boxplot(agg.combined$DAYS_ON_TIME, sub=paste("Outlier rows: ", boxplot.stats(agg.combined$DAYS_ON_TIME)$out))  
 
 # density plot 
-library(e1071)
 par(mfrow=c(1, 2))  # divide graph area in 2 columns
 
 plot(density(agg.combined$MONTHLY_TEMP), main="Density Plot: MONTHLY TEMP", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(agg.combined$MONTHLY_TEMP), 3)))  
@@ -304,16 +267,16 @@ summary(fit2)
 fit3 <- lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,3, raw=TRUE), agg.combined)
 summary(fit3) 
 
-# this polynomial has the best fit, with R2 of approx. 12%
-fit4<-lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,4, raw=TRUE), agg.combined)
-summary(fit4) 
+# this polynomial has the best fit, with R2 of approx. 13%
+fit6<-lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,6, raw=TRUE), agg.combined)
+summary(fit6) 
 
 xx <- seq(0,80, length=50)
 plot(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME)
 lines(xx, predict(fit, data.frame(MONTHLY_TEMP=xx)), col="red")
 lines(xx, predict(fit2, data.frame(MONTHLY_TEMP=xx)), col="green")
 lines(xx, predict(fit3, data.frame(MONTHLY_TEMP=xx)), col="blue")
-lines(xx, predict(fit4, data.frame(MONTHLY_TEMP=xx)), col="purple")
+lines(xx, predict(fit10, data.frame(MONTHLY_TEMP=xx)), col="purple")
 
 ```
 
