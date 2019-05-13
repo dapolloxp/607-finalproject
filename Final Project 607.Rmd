@@ -293,7 +293,16 @@ Our data for monthly temperatures and on-time delays appears to have several out
 Our initial scatterplot of monthly temperature vs. days on-time seems to indicate that there is a slight positive train, but based the on the polynomial regression model above, we can see that there isn't a direct relationship of temperature to train delays. In fact, the R2 of the model accounts for 12% of the variability. 
 
 
-
-
 # Conclusion
+
+Predicting NYC subway delays is fairly difficult. There are several factors that could potentially contribute to massive train delays, for example:
+
+* equipment issues
+* train issues
+* population
+* weather
+* time of day (rush hour)
+
+In this example, we choose to take one factor, weather, and determine what, if any impact it could have on train delays. Based on our analysis, we could only account for 12% of the variability of % Days on-time. In order to come up with a better model, we would need more data and additional analysis.
+
 
