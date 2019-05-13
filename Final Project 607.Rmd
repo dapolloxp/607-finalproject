@@ -12,7 +12,7 @@ output:
     toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
     number_sections: true  ## if you want number sections at each table header
     smooth_scroll: true
-    theme: cerulean  # many options for theme, this one is my favorite.
+    theme: darkly  # many options for theme, this one is my favorite.
     highlight: textmate  # specifies the syntax highlighting style
 ---
 
@@ -83,7 +83,6 @@ sub<- sub[c(-1:-3, -5:-10)]
 ## Weather Data Processing
 
 ```{r mongo}
-#file.old <- "/Users/davidapolinar/Dropbox/CUNYProjects/Srping2019/Data607/FinalProject/monthlyannualtemp-converted.csv"
 
 file <- "https://raw.githubusercontent.com/dapolloxp/607-finalproject/master/monthlyannualtemp-converted.csv"
 
@@ -93,13 +92,13 @@ missing.days <- c(77.5, 76, 68.5, 57.5, 47.5, 38)
 cleaned.weather[150,8:13] <- missing.days
 cleaned.weather[150,14] <- apply(cleaned.weather[10,2:13],1,mean)
 
-mongo_pwd_file <- "/Users/christinavalore/Desktop/password.txt"
-#mongo_pwd_file <- "/Users/davidapolinar/Dropbox/CUNYProjects/Srping2019/Data607/Week 13/mongopassword.txt"
+#mongo_pwd_file <- "/Users/christinavalore/Desktop/password.txt"
+mongo_pwd_file <- "/Users/davidapolinar/Dropbox/CUNYProjects/Srping2019/Data607/Week 13/mongopassword.txt"
 
 mongo_password <-read.delim(mongo_pwd_file, header = FALSE, stringsAsFactors = FALSE)
 
-url <- paste0("mongodb://nyc.admin:", mongo_password$V1 , "@52.167.52.62:27017/weather",sep = "")
-#url <- paste0("mongodb://nyc.admin:", mongo_password$V1 , "@10.20.1.6:27017/weather",sep = "")
+#url <- paste0("mongodb://nyc.admin:", mongo_password$V1 , "@52.167.52.62:27017/weather",sep = "")
+url <- paste0("mongodb://nyc.admin:", mongo_password$V1 , "@10.20.1.6:27017/weather",sep = "")
 mgo <- mongo(collection = "nyc", db = "weather",  url=url, verbose = TRUE)
 mgo$drop()
 mgo$insert(cleaned.weather)
