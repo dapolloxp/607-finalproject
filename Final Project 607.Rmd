@@ -197,10 +197,10 @@ combined<-combined %>%
 combined$ON_TIME <- as.numeric(combined$MONTHLY_ACTUAL >= combined$MONTHLY_TARGET)
 
 # change percenmtages to decimals
-combined$MONTHLY_TARGET <-  combined$MONTHLY_TARGET/100
-combined$MONTHLY_ACTUAL <-  combined$MONTHLY_ACTUAL/100
-combined$YTD_TARGET <-  combined$YTD_TARGET/100
-combined$YTD_ACTUAL <-  combined$YTD_ACTUAL/100
+combined$MONTHLY_TARGET <-combined$MONTHLY_TARGET/100
+combined$MONTHLY_ACTUAL <-combined$MONTHLY_ACTUAL/100
+combined$YTD_TARGET <-combined$YTD_TARGET/100
+combined$YTD_ACTUAL <-combined$YTD_ACTUAL/100
 
 # approximately 20 weekdays in a month as the OTP is only measured for weekdays
 combined$DAYS_ON_TIME<-combined$MONTHLY_ACTUAL*20
@@ -274,7 +274,7 @@ plot(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME)
 lines(xx, predict(fit, data.frame(MONTHLY_TEMP=xx)), col="red")
 lines(xx, predict(fit2, data.frame(MONTHLY_TEMP=xx)), col="green")
 lines(xx, predict(fit3, data.frame(MONTHLY_TEMP=xx)), col="blue")
-lines(xx, predict(fit10, data.frame(MONTHLY_TEMP=xx)), col="purple")
+lines(xx, predict(fit6, data.frame(MONTHLY_TEMP=xx)), col="purple")
 
 ```
 
