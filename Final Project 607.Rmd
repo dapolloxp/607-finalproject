@@ -64,7 +64,7 @@ For the *weather data*, we downloaded a .CSV and then placed into a MongoDB inst
 
 https://www.weather.gov/media/okx/Climate/CentralPark/monthlyannualtemp.pdf
 
-### Subway Data Processing
+## Subway Data Processing
 
 ```{r MTA}
 # load MTA data 
