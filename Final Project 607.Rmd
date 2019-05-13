@@ -283,7 +283,7 @@ qqline(fit$residuals)
 
 Our initial linear model was a *poor fit* as:
 
-* R-squared: low with only 4% of the variation of on-time performance being explained by the weather
+* R-squared: low with only 4% of the variation of on-time performance is explained by the weather
 * adjusted R-squared: is negative indicating no relationship
 * std.error: is close to zero 
 * F-statistic: is very low at .46
