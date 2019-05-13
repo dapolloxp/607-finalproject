@@ -214,8 +214,12 @@ agg.combined$PERIOD_MONTH<- as.factor(agg.combined$PERIOD_MONTH)
 
 # Exploration
 
+We plotted the data using a scatterplot and a best fit line, immediately we could see the correlation was not linear. We used a boxplot to look for outliers outside of the 1.5 IQR as these values can skew the model, there were none. Then, we used a density plot to check is the response variable was close to normal, DAYS_ON_TIME looks to be close to normal.
+
+Finally, we checked the correlation between MONTHLY_TEMP and DAYS_ON_TIME. The correlation is very low with ONLY 21% of the variation of DAYS_ON_TIME being explained by MONTHLY_TEMP.
+
 ```{r ggplot}
-# scatterplot shows the best fit line may not be linear
+# scatterplot shows the best fit may not be linear
 scatter.smooth(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME, xlab = "Monthly Temperature", ylab="% Days On Time")
 
 # boxplot to see outliers outside the 1.5 IQR
@@ -235,12 +239,10 @@ polygon(density(agg.combined$DAYS_ON_TIME), col="red")
 
 # correlation is low indicating much of the variation by DAYS_ON_TIME is not explained by MONTHLY_TEMP
 cor(agg.combined$MONTHLY_TEMP,agg.combined$DAYS_ON_TIME)
-
 ```
 
 # Modeling 
 ```{r}
-
 # Linear model: DAYS_ON_TIME =  0.003394 * MONTHLY_TEMP + 14.672797 
 fit<- lm(DAYS_ON_TIME ~ MONTHLY_TEMP, agg.combined)
 summary(fit) 
@@ -273,15 +275,11 @@ lines(xx, predict(fit, data.frame(MONTHLY_TEMP=xx)), col="red")
 lines(xx, predict(fit2, data.frame(MONTHLY_TEMP=xx)), col="green")
 lines(xx, predict(fit3, data.frame(MONTHLY_TEMP=xx)), col="blue")
 lines(xx, predict(fit6, data.frame(MONTHLY_TEMP=xx)), col="purple")
-
 ```
-
 
 # Interpretation
 
-Is weather a predictor of the NYC subway's on time percentage (OTP)?
-
-**Outliners:**
+**Outliers:**
 
 Our data for monthly temperatures and on-time delays appears to have several outliers, but it is much more pronounced with the OTP data towards the lower end.
 
