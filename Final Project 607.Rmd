@@ -33,7 +33,7 @@ For this study, we investigated potentical causes that would affect NYC subways 
 * https://patch.com/new-york/new-york-city/nyc-subway-delays-8-lines-messed-during-morning-rush;
 * https://www.cbsnews.com/news/new-york-struggling-transit-agency-mta-paid-one-worker-344k-in-overtime/.
 
-For our analysis, we took MTA subway data and historical weather patterns in NYC from the years 2011-2017. Our business question was: *Is weather predictive of NYC subway on-time performance?* After acquiring, cleaning and combining the dataframes, we ran a linear regression on the data. Unfortunately, the fit was poor and gave us litte insight into the relationship between weather and OTP. We then attempted to fit a polynomial to the data which gave a slightly better fit, however still the correlation was weak
+For our analysis, we used MTA subway data and historical weather patterns in NYC from the years 2011-2017. Our business question was: *Is weather predictive of NYC subway on-time performance?* After acquiring, cleaning and combining the dataframes, we ran a linear regression on the data. Unfortunately, the fit was poor and gave us litte insight into the relationship between weather and OTP. We then attempted to fit a polynomial to the data which gave a slightly better fit, however still the correlation was weak
 
 Our findings showed that NYC weather patterns are NOT predictive of NYC subway OTP. We can speculate that weather does not play a role as most of the subways are underground. Perhaps weather plays a stronger role in OTP for NYC buses or outside railways like the LIRR or the Staten Island Railway. 
 
