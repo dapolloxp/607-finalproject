@@ -215,20 +215,17 @@ agg.combined$PERIOD_MONTH<- as.factor(agg.combined$PERIOD_MONTH)
 # Exploration
 
 ```{r ggplot}
-
-# plot shows a curve in the values, linear regression might not be best
-plot(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME,xlab = "Monthly Temp", ylab="% Days On Time")
-
-# scatter plot 
+# scatterplot shows the best fit line may not be linear
 scatter.smooth(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME, xlab = "Monthly Temperature", ylab="% Days On Time")
 
-# boxplot to see outliers
+# boxplot to see outliers outside the 1.5 IQR
 par(mfrow=c(1, 2))  # divide graph area in 2 columns
-boxplot(x=agg.combined$MONTHLY_TEMP,sub=paste("Outlier rows: ", boxplot.stats(x=agg.combined$MONTHLY_TEMP)$out))  
+boxplot(agg.combined$MONTHLY_TEMP,sub=paste("Outlier rows: ", boxplot.stats(agg.combined$MONTHLY_TEMP)$out))  
+
 boxplot(agg.combined$DAYS_ON_TIME, sub=paste("Outlier rows: ", boxplot.stats(agg.combined$DAYS_ON_TIME)$out))  
 
-# density plot 
-par(mfrow=c(1, 2))  # divide graph area in 2 columns
+# density plot to see if reponse variable DAYS_ON_TIME is close to normal
+par(mfrow=c(1, 2))
 
 plot(density(agg.combined$MONTHLY_TEMP), main="Density Plot: MONTHLY TEMP", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(agg.combined$MONTHLY_TEMP), 3)))  
 polygon(density(agg.combined$MONTHLY_TEMP), col="red")
@@ -236,7 +233,7 @@ polygon(density(agg.combined$MONTHLY_TEMP), col="red")
 plot(density(agg.combined$DAYS_ON_TIME), main="Density Plot: DAYS ON TIME", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(agg.combined$DAYS_ON_TIME), 3)))  
 polygon(density(agg.combined$DAYS_ON_TIME), col="red")
 
-# the correlation is weak between the subway days on time and the monthly temp at 20%
+# correlation is low indicating much of the variation by DAYS_ON_TIME is not explained by MONTHLY_TEMP
 cor(agg.combined$MONTHLY_TEMP,agg.combined$DAYS_ON_TIME)
 
 ```
