@@ -114,7 +114,9 @@ For the subway data, we checked for the completeness of the data as some years w
 
 For the weather data, after gathering the monthly averages by year, we converted the data from wide to long. In preperation for combined the two dataframes, we changed the month values to numerics, renamed the columns to match in both dataframes and finally, filtered the weather data to include only the same years as the subway data, 2011 - 2017. 
 
-Combining the data required that the year and month in both dataframes had matching variables and titles. We then did a left join on the dataframes and renames the columns to keep the column names in a standard format. 
+Combining the data required that the year and month in both dataframes have matching variables and titles. We then did a left join on the dataframes and renames the columns to keep the column names in a standard format. After, we did a boolean comparison on the monthly actual vs monthly target OTP and created a new column, ON_TIME, with 1,0 values to indicate if the subway was on-time for that month.
+
+Finally, we changed the percentage values for OTP to decimals, divided by approximately 20 days as this study only takes weekdays into account, and added into a new column called DAYS_ON_TIME. We then aggregated the values by month to see the average DAYS_ON_TIME and monthly weather. 
 
 ## Subway Data Cleansing
 ```{r subway cleanse}
@@ -141,13 +143,10 @@ weather.2017.cleaned <- weather.2017 %>% select(-ANNUAL)
 new <- gather(weather.2017.cleaned , 'JAN', 'FEB', 'MAR', 'APR','MAY','JUN','JUL','AUG', 'SEP','OCT','NOV','DEC',key = 'Month', value = 'Avg Monthly Temp')
 ```
 **Before converting the data from wide to long:**
-
 ```{r}
 weather.2017
 ```
-
 **After the conversion:**
-
 ```{r}
 head(new %>% arrange(YEAR),n=20)
 
@@ -174,7 +173,6 @@ new<-new %>%
 new.weather<-new %>% 
   filter(PERIOD_YEAR >= "2011" & PERIOD_YEAR <="2017")
 ```
-
 ## Combined Data Cleansing
 ```{r combined}
 # check the structure of the two frames before merging as year and month variable types must match before merge
