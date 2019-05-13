@@ -86,9 +86,9 @@ sub<- sub[c(-1:-3, -5:-10)]
 
 ## Weather Data Processing
 
-For the weather data processing, I used a CSV file from the weather.gov site. However, due to the fact that there several years included as part of this data, I decided to store it in MongoDB and retrieve is via a simple MongoDB query
+For the weather data processing, I used a CSV file from the weather.gov site. However, due to the fact that there several years included as part of this data, I decided to store it in an Azure hosted MongoDB instance and retrieve is via a simple MongoDB query.
 
-The password is stored locally on a file for security reasons and the MongoDB instance is opened to only a few select IPs.
+The password is stored locally on a file for security reasons and the MongoDB instance is opened to only a few select IPs. In order to run this Markdown file, a MongoDB instance will need to be configured and the passowrd file and string will need to be updated.
 
 ```{r mongo}
 
