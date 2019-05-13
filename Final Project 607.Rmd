@@ -55,7 +55,11 @@ For the *MTA data*, we uploaded it directly into R via a .CSV. We then subsetted
 
 http://web.mta.info/developers/performance.html
 
-For the *weather data*, we downloaded a .CSV and then placed into a MongoDB instance running in Microsoft Azure. We then filtered by year with the query: weather.2017<-mgo$find('{"YEAR":{"$gt":2007}}'). The values were then stored into an R dataframe and converted from wide to long format using tidyverse gather.
+For the *weather data*, we downloaded a .CSV and then placed into a MongoDB instance running in Microsoft Azure. We then filtered by year with the query: 
+
+weather.2017<-mgo\$ find('{"YEAR":{"\$gt":2007}}'). 
+
+The values were then stored into an R dataframe and converted from wide to long format using tidyverse gather.
 
 *About the weather.gov dataset:
 
