@@ -250,8 +250,9 @@ cor(agg.combined$MONTHLY_TEMP,agg.combined$DAYS_ON_TIME)
 
 # Modeling 
 
-H0: Monthly temperature does NOT predict subway on-time performance
-H1: Monthly temperature DOES predict subway on-time performance
+- H0: Monthly temperature does NOT predict subway on-time performance
+
+- H1: Monthly temperature DOES predict subway on-time performance
 
 The first model used was a linear regression with the equation: 
 DAYS_ON_TIME =  0.003394 * MONTHLY_TEMP + 14.672797 
@@ -290,6 +291,7 @@ Our initial linear model was a *poor fit* as:
 * t-statistic: is only .679 with a p-value greater than .05
 
 The residuals plot also supports the poor fit as:
+
 * the residuals vary greatly and are not centered around 0
 * the residuals are not nearly normal as the values are curved at the tails
 
@@ -326,7 +328,7 @@ qqline(fit2$residuals)
 
 # fit3: residual analysis 
 plot(fit3$fitted.values, fit3$residuals, xlab="Fitted Values", ylab="Residuals",
-     main="Poly 2: Fitted Values vs. Residuals")
+     main="Poly 3: Fitted Values vs. Residuals")
 abline(h=0)
 
 qqnorm(fit3$residuals)
@@ -334,7 +336,7 @@ qqline(fit3$residuals)
 
 # fit4: residual analysis 
 plot(fit4$fitted.values, fit4$residuals, xlab="Fitted Values", ylab="Residuals",
-     main="Poly 2: Fitted Values vs. Residuals")
+     main="Poly 4: Fitted Values vs. Residuals")
 abline(h=0)
 
 qqnorm(fit4$residuals)
