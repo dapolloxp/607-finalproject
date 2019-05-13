@@ -92,13 +92,13 @@ missing.days <- c(77.5, 76, 68.5, 57.5, 47.5, 38)
 cleaned.weather[150,8:13] <- missing.days
 cleaned.weather[150,14] <- apply(cleaned.weather[10,2:13],1,mean)
 
-#mongo_pwd_file <- "/Users/christinavalore/Desktop/password.txt"
-mongo_pwd_file <- "/Users/davidapolinar/Dropbox/CUNYProjects/Srping2019/Data607/Week 13/mongopassword.txt"
+mongo_pwd_file <- "/Users/christinavalore/Desktop/password.txt"
+#mongo_pwd_file <- "/Users/davidapolinar/Dropbox/CUNYProjects/Srping2019/Data607/Week 13/mongopassword.txt"
 
 mongo_password <-read.delim(mongo_pwd_file, header = FALSE, stringsAsFactors = FALSE)
 
-#url <- paste0("mongodb://nyc.admin:", mongo_password$V1 , "@52.167.52.62:27017/weather",sep = "")
-url <- paste0("mongodb://nyc.admin:", mongo_password$V1 , "@10.20.1.6:27017/weather",sep = "")
+url <- paste0("mongodb://nyc.admin:", mongo_password$V1 , "@52.167.52.62:27017/weather",sep = "")
+#url <- paste0("mongodb://nyc.admin:", mongo_password$V1 , "@10.20.1.6:27017/weather",sep = "")
 mgo <- mongo(collection = "nyc", db = "weather",  url=url, verbose = TRUE)
 mgo$drop()
 mgo$insert(cleaned.weather)
@@ -241,8 +241,22 @@ cor(agg.combined$MONTHLY_TEMP,agg.combined$DAYS_ON_TIME)
 ```
 
 # Modeling 
+
+H0: Monthly temperature does NOT predict subway on-time performance
+H1: Monthly temperature DOES predict subway on-time performance
+
+The first model used was a linear regression with the equation: 
+DAYS_ON_TIME =  0.003394 * MONTHLY_TEMP + 14.672797 
+
+We need to evaluate the summary statistics to check for statistical signifigance:
+R-squared: higher value is better
+adjusted R-squared: higher value is better
+std.error: closer to zero is better
+F-statistic: higher is better
+t-statistic: greater than 1.96 for p-value to be less than .05
+
 ```{r}
-# Linear model: DAYS_ON_TIME =  0.003394 * MONTHLY_TEMP + 14.672797 
+# Linear model: DAYS_ON_TIME =  0.003394 * MONTHLY_TEMP + 15.3295609 
 fit<- lm(DAYS_ON_TIME ~ MONTHLY_TEMP, agg.combined)
 summary(fit) 
 
@@ -253,50 +267,87 @@ abline(fit)
 # residual analysis 
 plot(fit$fitted.values, fit$residuals, xlab="Fitted Values", ylab="Residuals",
      main="Fitted Values vs. Residuals")
+abline(h=0)
 
 qqnorm(fit$residuals)
 qqline(fit$residuals)
+```
 
-# can we transform into a better fit?
+Our initial linear model was a *poor fit* as:
+
+* R-squared: low with only 4% of the variation of on-time performance being explained by the weather
+* adjusted R-squared: is negative indicating no relationship
+* std.error: is close to zero 
+* F-statistic: is very low at .46
+* t-statistic: is only .679 with a p-value greater than .05
+
+The residuals plot also supports the poor fit as:
+* the residuals vary greatly and are not centered around 0
+* the residuals are not nearly normal as the values are curved at the tails
+
+Let us try to transform the model to a polynomial in hopes of seeing a better fit
+
+```{r}
+# second degree polynomial fit: DAYS_ON_TIME = -0.0220708* MONTHLY_TEMP + 0.0002278 * MONTHLY_TEMP^2 + 15.3295609
 fit2 <- lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,2, raw=TRUE), agg.combined)
 summary(fit2) 
 
+# third degree polynomial fit: DAYS_ON_TIME = -1.141e-01* MONTHLY_TEMP + 1.946e-03* MONTHLY_TEMP^2 - 1.027e-05* MONTHLY_TEMP^3 + 1.690e+01
 fit3 <- lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,3, raw=TRUE), agg.combined)
 summary(fit3) 
 
-# this polynomial has the best fit, with R2 of approx. 13%
-fit6<-lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,6, raw=TRUE), agg.combined)
-summary(fit6) 
+# fourth degree polynomial fit: DAYS_ON_TIME = -1.413e+00 * MONTHLY_TEMP + 3.899e-02* MONTHLY_TEMP^2 -4.657e-04 * MONTHLY_TEMP^3+ 2.041e-06* MONTHLY_TEMP^4 + 3.343e+01
+fit4<-lm(DAYS_ON_TIME ~ poly(MONTHLY_TEMP,4, raw=TRUE), agg.combined)
+summary(fit4) 
 
+# plot the polynomial models
 xx <- seq(0,80, length=50)
 plot(x=agg.combined$MONTHLY_TEMP,y=agg.combined$DAYS_ON_TIME)
 lines(xx, predict(fit, data.frame(MONTHLY_TEMP=xx)), col="red")
 lines(xx, predict(fit2, data.frame(MONTHLY_TEMP=xx)), col="green")
 lines(xx, predict(fit3, data.frame(MONTHLY_TEMP=xx)), col="blue")
-lines(xx, predict(fit6, data.frame(MONTHLY_TEMP=xx)), col="purple")
+lines(xx, predict(fit4, data.frame(MONTHLY_TEMP=xx)), col="purple")
+
+# fit2: residual analysis 
+plot(fit2$fitted.values, fit2$residuals, xlab="Fitted Values", ylab="Residuals",
+     main="Poly 2: Fitted Values vs. Residuals")
+abline(h=0)
+
+qqnorm(fit2$residuals)
+qqline(fit2$residuals)
+
+# fit3: residual analysis 
+plot(fit3$fitted.values, fit3$residuals, xlab="Fitted Values", ylab="Residuals",
+     main="Poly 2: Fitted Values vs. Residuals")
+abline(h=0)
+
+qqnorm(fit3$residuals)
+qqline(fit3$residuals)
+
+# fit4: residual analysis 
+plot(fit4$fitted.values, fit4$residuals, xlab="Fitted Values", ylab="Residuals",
+     main="Poly 2: Fitted Values vs. Residuals")
+abline(h=0)
+
+qqnorm(fit4$residuals)
+qqline(fit4$residuals)
+
 ```
 
-# Interpretation
+The polynomial models of 2nd, 3rd, 4th degree pass through more points and visually look to be a close fit, however looking at the summary statistics we can see as we add in more intercepts the std.error and p-values become larger indicating poor fits. 
 
-**Outliers:**
-
-Our data for monthly temperatures and on-time delays appears to have several outliers, but it is much more pronounced with the OTP data towards the lower end.
-
-**Observation:**
-
-Our initial scatterplot of monthly temperature vs. days on-time seems to indicate that there is a slight positive train, but based the on the polynomial regression model above, we can see that there isn't a direct relationship of temperature to train delays. In fact, the R2 of the model accounts for 12% of the variability. 
-
+The residual analysis on the polynomial models also shows even greater variance around the median and as the polynomial increases, the residuals at the tails become more skewed indicating the models are not nearly normal.
 
 # Conclusion
 
-Predicting NYC subway delays is fairly difficult. There are several factors that could potentially contribute to massive train delays, for example:
+We accept the NULL hypothesis that weather is NOT a predictor of subway on-time performance. After attempting a linear and polynomial regression, our models failed to show a strong correlation between the two variables. 
 
-* equipment issues
+In order to accurately predict subway on-time performance, we may need to add several additional factors to our model such as:
+
+* equipment failuers
 * train issues
-* population
+* customer injury
 * weather
 * time of day (rush hour)
-
-In this example, we choose to take one factor, weather, and determine what, if any impact it could have on train delays. Based on our analysis, we could only account for 12% of the variability of % Days on-time. In order to come up with a better model, we would need more data and additional analysis.
-
+* precipitation rates
 
