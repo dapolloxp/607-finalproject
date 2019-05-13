@@ -61,7 +61,7 @@ weather.2017<-mgo\$ find('{"YEAR":{"\$gt":2007}}').
 
 The values were then stored into an R dataframe and converted from wide to long format using tidyverse gather.
 
-*About the weather.gov dataset:
+About the weather.gov dataset:
 
   * temperatures were recorded in Central Park, NY
   * monthly average and annual temperatures from 1869 to 2018
